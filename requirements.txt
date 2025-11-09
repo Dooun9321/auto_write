@@ -1,0 +1,24 @@
+# LangChain and LangGraph
+langgraph==0.2.34
+langchain==0.3.1
+langchain-openai==0.2.1
+langchain-community==0.3.1
+
+# Google Cloud
+google-cloud-bigquery==3.25.0
+google-auth==2.34.0
+
+# Confluence
+atlassian-python-api==3.41.14
+
+# Streamlit
+streamlit==1.39.0
+
+# Utilities
+python-dotenv==1.0.1
+pandas==2.2.3
+pygments==2.18.0
+GitPython==3.1.43
+
+# OpenAI
+openai==1.51.2
