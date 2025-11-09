@@ -24,6 +24,9 @@ class Config:
 
     # Git Repository
     GIT_REPO_PATH = os.getenv("GIT_REPO_PATH", "./")
+    GIT_TOKEN = os.getenv("GIT_TOKEN", "")
+    GIT_USERNAME = os.getenv("GIT_USERNAME", "")
+    GIT_PASSWORD = os.getenv("GIT_PASSWORD", "")
 
     @classmethod
     def validate(cls) -> tuple[bool, list[str]]:

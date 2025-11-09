@@ -20,7 +20,12 @@ class DataAnalysisAgent:
         self.config = config or Config()
 
         # Initialize tools
-        self.code_analyzer = CodeAnalyzer(self.config.GIT_REPO_PATH)
+        self.code_analyzer = CodeAnalyzer(
+            repo_path=self.config.GIT_REPO_PATH,
+            git_token=self.config.GIT_TOKEN,
+            git_username=self.config.GIT_USERNAME,
+            git_password=self.config.GIT_PASSWORD,
+        )
         self.query_generator = QueryGenerator(self.config.OPENAI_API_KEY)
         self.bq_tool = BigQueryTool(self.config.GCP_PROJECT_ID)
         self.confluence_tool = None

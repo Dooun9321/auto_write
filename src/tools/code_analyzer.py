@@ -3,22 +3,112 @@
 import os
 import re
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 import git
+import tempfile
+import shutil
 
 
 class CodeAnalyzer:
     """Analyzes repository code to find SQL queries and patterns"""
 
-    def __init__(self, repo_path: str):
+    def __init__(
+        self,
+        repo_path: str,
+        git_token: Optional[str] = None,
+        git_username: Optional[str] = None,
+        git_password: Optional[str] = None,
+    ):
         """
         Initialize code analyzer
 
         Args:
-            repo_path: Path to the git repository
+            repo_path: Path to local git repository or remote git URL
+            git_token: Personal access token for private repositories
+            git_username: Git username (alternative to token)
+            git_password: Git password (alternative to token)
         """
-        self.repo_path = Path(repo_path)
+        self.original_repo_path = repo_path
+        self.git_token = git_token
+        self.git_username = git_username
+        self.git_password = git_password
         self.sql_extensions = [".sql", ".py", ".java", ".js", ".ts", ".go"]
+        self.temp_dir = None
+        self.repo_path = None
+
+        # Determine if it's a remote URL or local path
+        if self._is_remote_url(repo_path):
+            self.repo_path = self._clone_repository(repo_path)
+        else:
+            self.repo_path = Path(repo_path)
+
+    def _is_remote_url(self, path: str) -> bool:
+        """Check if the path is a remote git URL"""
+        return path.startswith(("http://", "https://", "git@", "ssh://"))
+
+    def _clone_repository(self, repo_url: str) -> Path:
+        """
+        Clone a remote repository to a temporary directory
+
+        Args:
+            repo_url: Remote git repository URL
+
+        Returns:
+            Path to cloned repository
+        """
+        try:
+            # Create temporary directory
+            self.temp_dir = tempfile.mkdtemp(prefix="code_analyzer_")
+            temp_path = Path(self.temp_dir)
+
+            # Build authenticated URL if token is provided
+            if self.git_token and repo_url.startswith("https://"):
+                # For GitHub, GitLab, Bitbucket: https://token@github.com/user/repo.git
+                parts = repo_url.replace("https://", "").split("/", 1)
+                if len(parts) == 2:
+                    host, path = parts
+                    repo_url = f"https://{self.git_token}@{host}/{path}"
+            elif self.git_username and self.git_password and repo_url.startswith("https://"):
+                # Username/password authentication
+                parts = repo_url.replace("https://", "").split("/", 1)
+                if len(parts) == 2:
+                    host, path = parts
+                    repo_url = f"https://{self.git_username}:{self.git_password}@{host}/{path}"
+
+            # Clone the repository
+            print(f"Cloning repository from {self.original_repo_path}...")
+            git.Repo.clone_from(
+                repo_url,
+                temp_path,
+                depth=1,  # Shallow clone for faster cloning
+            )
+            print(f"Repository cloned to {temp_path}")
+
+            return temp_path
+
+        except git.GitCommandError as e:
+            raise Exception(
+                f"Failed to clone repository: {str(e)}. "
+                "Please check the URL and authentication credentials."
+            )
+        except Exception as e:
+            # Clean up temp directory if cloning failed
+            if self.temp_dir and os.path.exists(self.temp_dir):
+                shutil.rmtree(self.temp_dir, ignore_errors=True)
+            raise Exception(f"Error cloning repository: {str(e)}")
+
+    def cleanup(self):
+        """Clean up temporary directory if it was created"""
+        if self.temp_dir and os.path.exists(self.temp_dir):
+            try:
+                shutil.rmtree(self.temp_dir)
+                print(f"Cleaned up temporary directory: {self.temp_dir}")
+            except Exception as e:
+                print(f"Warning: Failed to clean up temp directory: {str(e)}")
+
+    def __del__(self):
+        """Destructor to ensure cleanup"""
+        self.cleanup()
 
     def analyze_repository(self, max_files: int = 100) -> Dict:
         """

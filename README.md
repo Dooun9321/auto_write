@@ -118,8 +118,51 @@ CONFLUENCE_EMAIL=your_email@example.com
 CONFLUENCE_API_TOKEN=your_confluence_api_token
 CONFLUENCE_SPACE_KEY=your_space_key
 
-# Git Repository
+# Git Repository (로컬 경로 또는 원격 URL)
 GIT_REPO_PATH=./
+# 또는 원격 저장소: GIT_REPO_PATH=https://github.com/user/repo.git
+
+# Git 인증 (private 원격 저장소인 경우 필요)
+GIT_TOKEN=your_github_personal_access_token
+```
+
+#### Git 저장소 설정
+
+**로컬 저장소 사용:**
+```bash
+GIT_REPO_PATH=./  # 현재 디렉토리
+# 또는
+GIT_REPO_PATH=/path/to/your/local/repo
+```
+
+**원격 저장소 사용 (Public):**
+```bash
+GIT_REPO_PATH=https://github.com/username/repository.git
+```
+
+**원격 저장소 사용 (Private - 인증 필요):**
+
+1. **GitHub Personal Access Token 생성:**
+   - GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - "Generate new token" 클릭
+   - `repo` 권한 선택
+   - 토큰 복사
+
+2. **환경 변수 설정:**
+```bash
+GIT_REPO_PATH=https://github.com/username/private-repo.git
+GIT_TOKEN=ghp_your_token_here
+```
+
+**GitLab/Bitbucket도 동일한 방식으로 지원됩니다:**
+```bash
+# GitLab
+GIT_REPO_PATH=https://gitlab.com/username/repo.git
+GIT_TOKEN=your_gitlab_token
+
+# Bitbucket
+GIT_REPO_PATH=https://bitbucket.org/username/repo.git
+GIT_TOKEN=your_bitbucket_token
 ```
 
 ### 4. Google Cloud 인증
@@ -316,6 +359,56 @@ gcloud auth application-default login
 - OpenAI API 키가 유효한지 확인
 - API 사용량 제한을 확인
 - 모델 이름이 올바른지 확인
+
+### Git 저장소 접근 오류
+
+**"Failed to clone repository" 오류:**
+
+1. **URL 확인:**
+   - 저장소 URL이 올바른지 확인
+   - `.git` 확장자가 포함되어 있는지 확인
+   - 예: `https://github.com/username/repo.git`
+
+2. **Private 저장소 인증:**
+   - Personal Access Token이 설정되어 있는지 확인
+   - 토큰에 `repo` 권한이 있는지 확인
+   - 토큰이 만료되지 않았는지 확인
+
+3. **GitHub Token 생성 방법:**
+   ```
+   GitHub → Settings → Developer settings →
+   Personal access tokens → Tokens (classic) → Generate new token
+
+   권한 선택:
+   ✓ repo (전체 repo 권한)
+   ```
+
+4. **GitLab Token 생성 방법:**
+   ```
+   GitLab → Preferences → Access Tokens → Add new token
+
+   권한 선택:
+   ✓ read_repository
+   ```
+
+5. **환경 변수 확인:**
+   ```bash
+   # .env 파일에서 확인
+   GIT_TOKEN=your_token_here  # 토큰이 올바르게 설정되었는지 확인
+   ```
+
+**"Repository not found" 오류:**
+- 저장소 이름과 소유자가 올바른지 확인
+- Private 저장소인 경우 인증 토큰이 설정되어 있는지 확인
+
+**로컬 저장소 사용 시 권한 오류:**
+```bash
+# 디렉토리 권한 확인
+ls -la /path/to/repo
+
+# 필요시 권한 변경
+chmod -R 755 /path/to/repo
+```
 
 ## 📧 연락처
 
