@@ -8,7 +8,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.agent.graph import DataAnalysisAgent
+from src.agent.multi_project_graph import EnhancedDataAnalysisAgent
 from src.utils.config import Config
 
 
@@ -94,7 +94,7 @@ def main():
                     if not is_valid:
                         st.error(f"Missing required configuration: {', '.join(missing)}")
                     else:
-                        st.session_state.agent = DataAnalysisAgent(config)
+                        st.session_state.agent = EnhancedDataAnalysisAgent(config)
                         st.success("✅ Agent initialized successfully!")
 
                 except Exception as e:
@@ -110,10 +110,39 @@ def main():
         else:
             st.error(f"❌ Missing: {', '.join(missing)}")
 
+        # LLM Provider
+        st.markdown("### LLM Provider")
+        llm_config = config.get_llm_config()
+        st.info(f"🤖 {llm_config['provider'].upper()}: {llm_config['model']}")
+
+        # BigQuery Projects
+        st.markdown("### BigQuery Projects")
+        bq_projects = config.get_bigquery_projects()
+        if bq_projects:
+            st.success(f"✅ {len(bq_projects)} project(s)")
+            for proj in bq_projects[:3]:
+                st.text(f"  • {proj}")
+            if len(bq_projects) > 3:
+                st.text(f"  ... and {len(bq_projects) - 3} more")
+        else:
+            st.error("❌ No BigQuery projects")
+
+        # Git Repositories
+        st.markdown("### Git Repositories")
+        git_repos = config.get_git_repositories()
+        if git_repos:
+            st.success(f"✅ {len(git_repos)} repo(s)")
+            for repo in git_repos[:3]:
+                st.text(f"  • {repo}")
+            if len(git_repos) > 3:
+                st.text(f"  ... and {len(git_repos) - 3} more")
+
         # Optional configurations
         st.markdown("### Optional Features")
         if config.CONFLUENCE_URL:
             st.success("✅ Confluence configured")
+            if config.CONFLUENCE_PARENT_PAGE_ID:
+                st.text(f"  Parent Page ID: {config.CONFLUENCE_PARENT_PAGE_ID}")
         else:
             st.warning("⚠️ Confluence not configured")
 

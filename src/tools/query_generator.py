@@ -9,17 +9,24 @@ from typing import Dict, List
 class QueryGenerator:
     """Generates SQL queries based on user questions and code context"""
 
-    def __init__(self, api_key: str, model: str = "gpt-4o"):
+    def __init__(self, api_key: str = None, model: str = "gpt-4o", llm=None):
         """
         Initialize query generator
 
         Args:
-            api_key: OpenAI API key
-            model: Model to use for generation
+            api_key: OpenAI API key (deprecated, use llm parameter)
+            model: Model to use for generation (deprecated, use llm parameter)
+            llm: LLM instance to use for generation
         """
-        self.llm = ChatOpenAI(
-            api_key=api_key, model=model, temperature=0.1  # Low temperature for precise queries
-        )
+        if llm:
+            self.llm = llm
+        elif api_key:
+            # Legacy support
+            self.llm = ChatOpenAI(
+                api_key=api_key, model=model, temperature=0.1
+            )
+        else:
+            raise ValueError("Either llm or api_key must be provided")
 
     def generate_query(
         self,
@@ -117,6 +124,11 @@ ASSUMPTIONS:
         """Build context string from code analysis and dataset info"""
         context_parts = []
 
+        # Add schema context if available
+        if code_context and code_context.get("schema_context"):
+            context_parts.append(code_context["schema_context"])
+            context_parts.append("\n\n")
+
         if code_context and code_context.get("success"):
             context_parts.append("=== CODE REPOSITORY ANALYSIS ===\n")
             context_parts.append(
@@ -127,6 +139,11 @@ ASSUMPTIONS:
             tables = code_context.get("table_references", [])
             if tables:
                 context_parts.append(f"\nKnown tables: {', '.join(tables[:20])}\n")
+
+        # Add code context string if provided
+        if code_context and code_context.get("code_context"):
+            context_parts.append("\n")
+            context_parts.append(code_context["code_context"])
 
             # Add common patterns
             patterns = code_context.get("common_patterns", {})

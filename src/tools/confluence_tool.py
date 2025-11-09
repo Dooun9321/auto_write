@@ -17,7 +17,8 @@ class ConfluenceTool:
         username: str,
         api_token: str,
         space_key: str,
-        openai_api_key: str = None,
+        parent_page_id: Optional[str] = None,
+        llm = None,
     ):
         """
         Initialize Confluence client
@@ -27,14 +28,13 @@ class ConfluenceTool:
             username: Confluence username/email
             api_token: Confluence API token
             space_key: Confluence space key
-            openai_api_key: OpenAI API key for documentation generation
+            parent_page_id: Optional parent page ID for creating documents
+            llm: LLM instance for documentation generation
         """
         self.confluence = Confluence(url=url, username=username, password=api_token)
         self.space_key = space_key
-        self.llm = None
-
-        if openai_api_key:
-            self.llm = ChatOpenAI(api_key=openai_api_key, model="gpt-4o", temperature=0.3)
+        self.parent_page_id = parent_page_id
+        self.llm = llm
 
     def generate_documentation(
         self,

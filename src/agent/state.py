@@ -17,6 +17,9 @@ class AgentState(TypedDict):
     # Analyzed code context from repository
     code_context: str
 
+    # BigQuery schema context
+    schema_context: str
+
     # Generated SQL query
     sql_query: str
 
